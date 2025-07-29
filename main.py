@@ -60,7 +60,6 @@ def mentor_check_in():
 
     if last_mood:
         print(f"Based on your mood ({last_mood}), remember: progress isn't always linear. Keep showing up!")
-mentor_check_in()
 
 
 def check_goals(goals):
@@ -146,7 +145,6 @@ def notify(message):
         # Windows notification can be added with plyer
     except Exception:
         pass
-run_agent()
 
 def show_progress_bars():
     try:
@@ -242,6 +240,7 @@ def speak(text):
 
 
 def run_agent():
+    mentor_check_in()
     show_menu()
     print("🔄 Loading your tasks and goals...")
 

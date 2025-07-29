@@ -3,7 +3,15 @@ from data_utils import ensure_file, get_path
 def load_tasks():
     path = ensure_file("tasks.txt")
     with open(path, "r") as f:
-        return [line.strip() for line in f if line.strip()]
+        tasks = []
+        for line in f:
+            cleaned = line.strip()
+            if not cleaned:
+                continue
+            if cleaned.startswith(("def ", "from ", "import ")):
+                continue
+            tasks.append(cleaned)
+        return tasks
 
 def save_tasks(tasks):
     path = ensure_file("tasks.txt")
