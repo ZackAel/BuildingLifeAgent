@@ -93,10 +93,17 @@ Data files will be created in the `data/` folder on first run.
 
 ## Web dashboard
 
-A lightweight dashboard built with Streamlit is provided in `webapp.py`. It lets you view and update tasks, goals and mood logs in a browser. To start it run:
+A lightweight dashboard built with Streamlit is provided in `webapp.py`. It lets
+you view and update tasks, goals, mood logs and now journal entries in a
+browser. To start it run:
 
 ```bash
 streamlit run webapp.py
 ```
+
+Use the **Journal** section of the dashboard to quickly jot down notes or
+reflection entries. They are saved to `data/journal.txt` alongside your tasks
+and goals.
+
 
 The dashboard also sends system notifications using plyer when you add tasks or log your mood. Enable voice commands from the sidebar to try simple spoken commands like **"add task ..."** or **"log mood ..."**.

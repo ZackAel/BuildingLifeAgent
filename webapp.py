@@ -77,3 +77,24 @@ if st.sidebar.checkbox("Enable Voice Commands"):
             st.sidebar.write("Could not understand audio")
         except Exception as e:
             st.sidebar.write("Error:", e)
+
+# --- JOURNAL SECTION ---
+st.header("Journal")
+recent_entries = []
+try:
+    from journal import log_entry, load_entries
+    recent_entries = load_entries(5)
+except Exception:
+    log_entry = None
+
+if recent_entries:
+    st.subheader("Recent Entries")
+    for line in recent_entries:
+        st.write("- ", line)
+
+journal_text = st.text_area("New Entry")
+if st.button("Save Entry") and journal_text:
+    if log_entry:
+        log_entry(journal_text)
+        notification.notify(title="Entry Saved", message=journal_text[:20])
+    st.experimental_rerun()
