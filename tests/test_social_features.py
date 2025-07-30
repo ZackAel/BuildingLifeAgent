@@ -6,7 +6,7 @@ def test_match_partners():
     users = {
         'alice': ['ai', 'fitness'],
         'bob': ['ai', 'cooking'],
-        'carol': ['fitness', 'yoga']
+        'carol': ['fitness', 'gym']
     }
     matches = matching_algorithm.match_partners(users)
     assert matches['alice'] in {'bob', 'carol'}
