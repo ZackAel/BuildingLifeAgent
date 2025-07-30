@@ -20,10 +20,10 @@ st.title("BuildingLifeAgent Dashboard")
 with st.sidebar:
     st.header("Quick Actions")
     if st.button("Refresh Data"):
-        st.experimental_rerun()
+        st.rerun()
     if st.button("Update Streak"):
         update_streak()
-        st.experimental_rerun()
+        st.rerun()
     if st.button("Show Energy Index"):
         st.write(f"Energy: {compute_energy_index()}")
 
@@ -32,14 +32,14 @@ st.header("Tasks")
 tasks = load_tasks()
 
 df = pd.DataFrame({"Task": tasks})
-edited = st.experimental_data_editor(
+edited = st.data_editor(
     df, num_rows="dynamic", use_container_width=True, key="task_editor"
 )
 updated_tasks = [t for t in edited["Task"].tolist() if t]
 if updated_tasks != tasks:
     save_tasks(updated_tasks)
     tasks = updated_tasks
-    st.experimental_rerun()
+    st.rerun()
 
 for i, task in enumerate(tasks, 1):
     if st.checkbox(task, key=f"task_{i}"):
@@ -47,7 +47,7 @@ for i, task in enumerate(tasks, 1):
         tasks.remove(task)
         save_tasks(tasks)
         notification.notify(title="Task Completed", message=task)
-        st.experimental_rerun()
+        st.rerun()
 
 new_task = st.text_input("Add Task", key="add_task_input")
 if st.button("Add Task", key="add_task_btn") and new_task:
@@ -55,7 +55,7 @@ if st.button("Add Task", key="add_task_btn") and new_task:
     save_tasks(tasks)
     record_task_date(new_task)
     notification.notify(title="New Task Added", message=new_task)
-    st.experimental_rerun()
+    st.rerun()
 
 # --- GOALS SECTION ---
 st.header("Goals")
@@ -65,7 +65,7 @@ new_goal = st.text_input("Add Goal")
 if st.button("Save Goal") and new_goal:
     save_goal(new_goal)
     notification.notify(title="Goal Saved", message=new_goal)
-    st.experimental_rerun()
+    st.rerun()
 
 # --- MOOD SECTION ---
 st.header("Mood Log")
@@ -79,7 +79,7 @@ mood_entry = st.text_input("Log Mood")
 if st.button("Log Mood") and mood_entry:
     log_mood(mood_entry)
     notification.notify(title="Mood Logged", message=mood_entry)
-    st.experimental_rerun()
+    st.rerun()
 
 mood_trend_chart()
 energy_level_gauge()
@@ -121,7 +121,7 @@ if st.button("Save Entry") and journal_text:
     if log_entry:
         log_entry(journal_text)
         notification.notify(title="Entry Saved", message=journal_text[:20])
-    st.experimental_rerun()
+    st.rerun()
 
 fab_html = """
 <style>

@@ -11,10 +11,16 @@ def update_streak():
         return 1
 
     with open(STREAK_FILE, "r") as f:
-        last = f.readlines()[-1].strip()
-        last_date_str, streak_str = last.split(",")
-        last_date = datetime.date.fromisoformat(last_date_str)
-        streak = int(streak_str)
+        lines = f.readlines()
+        if not lines:
+            # Empty file; initialize streak
+            last_date = today - datetime.timedelta(days=1)
+            streak = 0
+        else:
+            last = lines[-1].strip()
+            last_date_str, streak_str = last.split(",")
+            last_date = datetime.date.fromisoformat(last_date_str)
+            streak = int(streak_str)
 
     if today == last_date:
         return streak
@@ -31,6 +37,9 @@ def get_current_streak():
     if not os.path.exists(STREAK_FILE):
         return 0
     with open(STREAK_FILE, "r") as f:
-        last = f.readlines()[-1].strip()
+        lines = f.readlines()
+        if not lines:
+            return 0
+        last = lines[-1].strip()
         _, streak_str = last.split(",")
         return int(streak_str)
