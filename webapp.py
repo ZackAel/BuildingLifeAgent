@@ -1,7 +1,7 @@
 import streamlit as st
 from plyer import notification
 import speech_recognition as sr
-from tasks import load_tasks, save_tasks, complete_task
+from tasks import load_tasks, save_tasks, complete_task, record_task_date
 from goals import load_goals, save_goal
 from mood import log_mood, get_today_mood
 
@@ -22,6 +22,7 @@ new_task = st.text_input("Add Task")
 if st.button("Add Task") and new_task:
     tasks.append(new_task)
     save_tasks(tasks)
+    record_task_date(new_task)
     notification.notify(title="New Task Added", message=new_task)
     st.experimental_rerun()
 

@@ -6,7 +6,9 @@ __pycache__/
 .env
 
 # Local data
-data/
+data/*
+!data/.gitkeep
+
 
 # Logs
 *.log

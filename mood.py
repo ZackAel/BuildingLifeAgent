@@ -1,6 +1,8 @@
 import datetime
+from data_utils import ensure_file
 
-MOOD_FILE = "data/mood_log.txt"
+MOOD_FILE = ensure_file("mood_log.txt")
+
 
 def log_mood(mood, note=""):
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

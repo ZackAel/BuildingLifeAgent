@@ -1,18 +1,21 @@
-import time
 import argparse
-import sys
+import datetime
 import os
-import datetime
-from gemini_api import ask_gemini
-from tasks import load_tasks, save_tasks
-from goals import load_goals
-from motivation import get_motivational_message
-from mood import log_mood, get_today_mood, journaling_prompt
 import random
-from streak import update_streak, get_current_streak
-from streak import get_current_streak
-from mood import get_today_mood
-import datetime
+import sys
+import time
+
+from gemini_api import ask_gemini
+from goals import load_goals
+from mood import get_today_mood, journaling_prompt, log_mood
+from motivation import get_motivational_message
+from streak import get_current_streak, update_streak
+from tasks import load_tasks, save_tasks, complete_task, record_task_date, get_task_age_days
+from energy import compute_energy_index
+from relationships import contacts_needing_ping, log_interaction
+from learning import skill_progress
+from guardrails import burnout_warning
+from schedule_utils import intelligent_schedule
 
 
 # === CONFIGURATION ===
@@ -36,8 +39,6 @@ def ensure_data_files():
                 pass
 
 def prioritize_tasks(tasks):
-    from mood import get_today_mood
-    import datetime
     mood, _ = get_today_mood()
     hour = datetime.datetime.now().hour
     prompt = "Prioritize these tasks for today"
@@ -74,6 +75,7 @@ def add_task():
         tasks = load_tasks()
         tasks.append(task)
         save_tasks(tasks)
+        record_task_date(task)
         print(f"✅ Task added: {task}")
 
 def add_goal():
@@ -82,6 +84,12 @@ def add_goal():
         with open(GOALS_FILE, "a") as f:
             f.write(goal + "\n")
         print(f"✅ Goal added: {goal}")
+
+def log_contact():
+    name = input("Who did you interact with? ").strip()
+    if name:
+        log_interaction(name)
+        print(f"✅ Interaction with {name} logged.")
 
 reminders = [
     "Take a moment to stand up and stretch! 🧘",
@@ -118,8 +126,9 @@ def add_mood():
         note = input("Want to add a short note or skip? (press Enter to skip): ").strip()
         log_mood(mood, note)
         print("✅ Mood logged!")
+        if any(k in mood.lower() for k in ["tired", "stressed"]):
+            mindfulness_break()
 
-from mood import get_today_mood
 
 def mood_based_message():
     mood, note = get_today_mood()
@@ -180,6 +189,7 @@ def show_menu():
         print("  [3] Log my mood")
         print("  [4] Get a journaling prompt")
         print("  [5] Mark a task as completed")
+        print("  [6] Log interaction with contact")
         print("  [ENTER] Continue\n")
         choice = input("Choose an option: ").strip()
         if choice == "1":
@@ -200,10 +210,49 @@ def show_menu():
                 complete_task(task)
                 save_tasks(tasks)
                 print(f"✅ Task completed: {task}")
-            else:   
+            else:
                 print("Invalid selection.")
+        elif choice == "6":
+            log_contact()
         else:
             break
+
+def check_stuck_tasks(tasks):
+    for t in tasks:
+        if get_task_age_days(t) > 2:
+            print(f"🔄 '{t}' has been around for a while. Break it down or defer?")
+
+def energy_based_suggestion(tasks, energy):
+    if energy >= 70:
+        print("\n⚡ Energy high! Ideal time for deep work.")
+        if tasks:
+            print("Focus on:", tasks[0])
+    elif energy <= 40:
+        print("\n😌 Energy low. Pick an easy task or take a break.")
+    else:
+        print("\nEnergy level is steady.")
+
+def mindfulness_break():
+    print("\n🧘 Let's take a 60-second breathing break.")
+    for i in range(60, 0, -1):
+        print(f"{i} ", end="", flush=True)
+        time.sleep(1)
+    print("\nDone!")
+
+def conversational_response(text: str) -> str:
+    if any(k in text.lower() for k in ["putting off", "stuck", "procrastinat"]):
+        prompt = (
+            f"The user says: '{text}'. Help them using a short 5-Whys coaching "
+            "conversation and suggest small sub-tasks or accountability options."
+        )
+    else:
+        prompt = f"Friendly productivity coach response to: '{text}'"
+    return ask_gemini(prompt)
+
+def chat_with_agent():
+    msg = input("Anything you'd like to chat about? (Enter to skip) ").strip()
+    if msg:
+        print(conversational_response(msg))
 
 def summarize_journal():
     try:
@@ -242,6 +291,7 @@ def speak(text):
 def run_agent():
     mentor_check_in()
     show_menu()
+    chat_with_agent()
     print("🔄 Loading your tasks and goals...")
 
     try:
@@ -252,12 +302,16 @@ def run_agent():
         return
 
     summarize_journal()
+    energy = compute_energy_index()
+    print(f"\n⚡ Energy index: {energy}/100")
 
     try:
         print("\n📋 Prioritized Tasks:")
         print(prioritize_tasks(tasks))
         print("\n🗓️ Sample Daily Schedule:")
         print(create_schedule(tasks))
+        print("\n🗓️ Intelligent Schedule:")
+        print(intelligent_schedule(tasks))
     except Exception as e:
         print(f"⚠️ Error prioritizing tasks: {e}")
 
@@ -266,6 +320,29 @@ def run_agent():
         print(check_goals(goals))
     except Exception as e:
         print(f"⚠️ Error checking goals: {e}")
+
+    try:
+        progress = skill_progress()
+        if progress:
+            print("\n📚 Learning Progress:")
+            for skill, count in progress.items():
+                print(f"  {skill}: {count} completed task(s)")
+    except Exception:
+        pass
+
+    try:
+        stale = contacts_needing_ping()
+        if stale:
+            print("\n👥 Consider reaching out to:", ", ".join(stale))
+    except Exception:
+        pass
+
+    try:
+        warn = burnout_warning()
+        if warn:
+            print("\n⚠️ Burnout Guardrail:", warn)
+    except Exception:
+        pass
 
     try:
         print("\n💬 Motivational Message:")
@@ -298,6 +375,8 @@ def run_agent():
     input("Take a moment to reflect (press Enter when ready)...")
 
     print("\n⏰ Quick Reminder:", random_reminder())
+    if energy <= 40:
+        mindfulness_break()
     print("\n✅ Done! Will repeat after interval...\n")
 
 def suggest_routine_change():

@@ -1,109 +1,53 @@
 # BuildingLifeAgent
 
-A small productivity assistant that uses the Gemini API for task management and motivation.
+BuildingLifeAgent is a small command line productivity assistant. It keeps track of tasks, goals and mood logs in the `data/` directory and uses Google's Gemini API to generate motivational messages and task suggestions.
 
 ## Setup
 
-1. Install dependencies (requires Python 3):
+1. Install the required packages (Python 3.8+):
    ```bash
-   pip install requests python-dotenv
+   pip install -r requirements.txt
    ```
-2. Create a `.env` file in the project root containing your API key:
+2. Provide your [Gemini API](https://ai.google.dev/) key in a `.env` file at the project root:
    ```bash
    GEMINI_API_KEY=your_key_here
    ```
-3. Run the agent:
-   ```bash
-   python main.py
-   ```
-
-# BuildingLifeAgent
-
-BuildingLifeAgent is a simple command line productivity assistant. It keeps track of tasks, goals and mood, then uses Google's Gemini API to generate encouraging messages and scheduling suggestions.
-
-## Setup
-
-1. Install the required packages:
-
-```bash
-pip install -r requirements.txt
-```
-
-2. Provide your [Gemini API](https://ai.google.dev/) key. The application looks for a `.env` file in the project root with the following line:
-
-```
-GEMINI_API_KEY=your_key_here
-```
-
-Alternatively, set the `GEMINI_API_KEY` environment variable before running the program.
+   Alternatively, set `GEMINI_API_KEY` in your environment before running the program.
 
 ## Usage
 
-Run the main loop with the default hourly interval:
-
+Run the console agent with the default hourly interval:
 ```bash
 python main.py
 ```
-
-For faster testing you can lower the interval (seconds) using `--interval`:
-
+For faster testing, lower the check-in interval (seconds):
 ```bash
 python main.py --interval 60
 ```
-
-The agent will prompt you to add tasks, goals or mood entries and will query the Gemini API to prioritize tasks and give motivational feedback.
+The program will prompt you to add tasks, goals or mood entries and then query the Gemini API for supportive feedback.
 
 ## Optional Features
 
-- **Notifications:** Install `plyer` for desktop notifications on Windows.
-- **GUI:** You can create a simple interface using `streamlit` or `tkinter`.
-- **Speech:** Install `pyttsx3` for text‑to‑speech output and `speechrecognition` for voice commands.
+- **Notifications:** install `plyer` for desktop alerts.
+- **Voice & speech:** install `pyttsx3` for text-to-speech and `SpeechRecognition` (requires `pyaudio`) for voice commands.
+- **GUI:** install `streamlit` to use the included web dashboard.
 
-These extras are not required but can enhance the experience.
-
-
-# BuildingLifeAgent
-
-This project is a simple personal productivity assistant. It stores tasks, goals and mood logs in the `data/` directory and can generate motivational messages via the Gemini API.
-
-## Requirements
-
-- Python 3.8+
-- [Streamlit](https://streamlit.io) for the optional web UI
-- [plyer](https://github.com/kivy/plyer) for desktop notifications
-- [SpeechRecognition](https://github.com/Uberi/speech_recognition) (optional for voice commands)
-
-Install dependencies with:
-
-```bash
-pip install streamlit plyer SpeechRecognition pyaudio
-```
-
-`pyaudio` is required by SpeechRecognition for microphone input. On some systems you may need additional system packages to build it.
-
-## Command line usage
-
-Run the console agent:
-
-```bash
-python main.py
-```
-
-Data files will be created in the `data/` folder on first run.
+These extras are optional but can enhance the experience.
 
 ## Web dashboard
 
-A lightweight dashboard built with Streamlit is provided in `webapp.py`. It lets
-you view and update tasks, goals, mood logs and now journal entries in a
-browser. To start it run:
-
+A lightweight dashboard (`webapp.py`) lets you manage tasks, goals, mood logs and journal entries in a browser. Start it with:
 ```bash
 streamlit run webapp.py
 ```
-
-Use the **Journal** section of the dashboard to quickly jot down notes or
-reflection entries. They are saved to `data/journal.txt` alongside your tasks
-and goals.
+Journal notes are saved to `data/journal.txt` alongside the other data files. The dashboard can also send notifications using plyer and, if enabled in the sidebar, respond to basic voice commands.
 
 
-The dashboard also sends system notifications using plyer when you add tasks or log your mood. Enable voice commands from the sidebar to try simple spoken commands like **"add task ..."** or **"log mood ..."**.
+## Running Tests
+
+Install the requirements and run `pytest` from the project root:
+
+```bash
+pip install -r requirements.txt
+pytest
+```
