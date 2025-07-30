@@ -1,4 +1,3 @@
-import argparse
 import datetime
 import os
 import random
@@ -16,6 +15,7 @@ from relationships import contacts_needing_ping, log_interaction
 from learning import skill_progress
 from guardrails import burnout_warning
 from schedule_utils import intelligent_schedule
+from notification_manager import NotificationManager
 
 
 # === CONFIGURATION ===
@@ -29,6 +29,9 @@ ACTIVITY_FILE = "data/activity_log.txt"
 
 DEFAULT_INTERVAL_SECONDS = 3600  # 1 hour
 TEST_INTERVAL_SECONDS = 60       # 1 minute (for quick testing)
+
+# initialize notification manager
+notifier = NotificationManager()
 
 def ensure_data_files():
     """Make sure data directory and files exist."""
@@ -144,11 +147,13 @@ def mood_based_message():
     else:
         return "Every feeling is valid. You got this!"
 
-def notify(message: str) -> None:
-    """Display a desktop notification in a cross-platform way."""
+def notify(message: str, actions: dict | None = None) -> None:
+    """Display a notification. If actions provided, show interactive popup."""
     try:
-        from plyer import notification
-        notification.notify(title="AI Agent", message=message)
+        if actions:
+            notifier.send_interactive(message, actions)
+        else:
+            notifier.send_alert(message)
     except Exception:
         # Notifications are optional; ignore errors quietly
         pass
@@ -344,8 +349,16 @@ def run_agent():
 
     try:
         print("\n💬 Motivational Message:")
-        print(get_motivational_message())
+        message = get_motivational_message()
+        print(message)
+        notify(message)
         notify(random_reminder())
+        if tasks:
+            def mark_first():
+                task = tasks.pop(0)
+                complete_task(task)
+                save_tasks(tasks)
+            notify(f"Next task: {tasks[0]}", actions={"Mark Done": mark_first, "Log Mood": add_mood})
     except Exception as e:
         print(f"⚠️ Error fetching motivational message: {e}")
 
@@ -422,19 +435,6 @@ def countdown(seconds):
         sys.exit(0)
 
 if __name__ == "__main__":
+    """Run the agent once in console mode."""
     ensure_data_files()
-    parser = argparse.ArgumentParser(description="Your AI Productivity Agent")
-    parser.add_argument("--interval", type=int, default=DEFAULT_INTERVAL_SECONDS,
-                        help="Seconds between check-ins (default: 3600, 1 hour). Use a lower number to test quickly.")
-    args = parser.parse_args()
-    interval = args.interval
-
-    print("Your AI Agent is running! (Press Ctrl+C to exit)\n")
-    try:
-        while True:
-            run_agent()
-            countdown(interval)
-    except KeyboardInterrupt:
-        print("\n👋 Exiting gracefully. Have a great day!")
-    except Exception as e:
-        print(f"❌ Unexpected error: {e}")
+    run_agent()

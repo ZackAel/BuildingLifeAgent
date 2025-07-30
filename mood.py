@@ -42,3 +42,20 @@ def journaling_prompt():
     import random
     return random.choice(base_prompts)
 
+
+ASCII_MOODS = {
+    "happy": "(^_^)",
+    "stressed": "(>_<)",
+    "tired": "(-_-)",
+    "calm": "( -_-)",
+}
+
+def ascii_mood(mood: str | None) -> str:
+    """Return a simple ASCII representation for a mood."""
+    if not mood:
+        return "(-_-)"
+    mood = mood.lower()
+    for key, val in ASCII_MOODS.items():
+        if key in mood:
+            return val
+    return "(-_-)"

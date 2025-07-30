@@ -1,15 +1,46 @@
 import streamlit as st
 from plyer import notification
-import speech_recognition as sr
+from voice_assistant import VoiceAssistant
 from tasks import load_tasks, save_tasks, complete_task, record_task_date
 from goals import load_goals, save_goal
 from mood import log_mood, get_today_mood
+from streak import update_streak
+from energy import compute_energy_index
+from dashboard_widgets import (
+    show_streak_progress,
+    mood_trend_chart,
+    task_completion_heatmap,
+    energy_level_gauge,
+)
+import pandas as pd
 
+st.set_page_config(page_title="BuildingLifeAgent Dashboard", layout="wide")
 st.title("BuildingLifeAgent Dashboard")
+
+with st.sidebar:
+    st.header("Quick Actions")
+    if st.button("Refresh Data"):
+        st.experimental_rerun()
+    if st.button("Update Streak"):
+        update_streak()
+        st.experimental_rerun()
+    if st.button("Show Energy Index"):
+        st.write(f"Energy: {compute_energy_index()}")
 
 # --- TASKS SECTION ---
 st.header("Tasks")
 tasks = load_tasks()
+
+df = pd.DataFrame({"Task": tasks})
+edited = st.experimental_data_editor(
+    df, num_rows="dynamic", use_container_width=True, key="task_editor"
+)
+updated_tasks = [t for t in edited["Task"].tolist() if t]
+if updated_tasks != tasks:
+    save_tasks(updated_tasks)
+    tasks = updated_tasks
+    st.experimental_rerun()
+
 for i, task in enumerate(tasks, 1):
     if st.checkbox(task, key=f"task_{i}"):
         complete_task(task)
@@ -18,8 +49,8 @@ for i, task in enumerate(tasks, 1):
         notification.notify(title="Task Completed", message=task)
         st.experimental_rerun()
 
-new_task = st.text_input("Add Task")
-if st.button("Add Task") and new_task:
+new_task = st.text_input("Add Task", key="add_task_input")
+if st.button("Add Task", key="add_task_btn") and new_task:
     tasks.append(new_task)
     save_tasks(tasks)
     record_task_date(new_task)
@@ -50,34 +81,26 @@ if st.button("Log Mood") and mood_entry:
     notification.notify(title="Mood Logged", message=mood_entry)
     st.experimental_rerun()
 
+mood_trend_chart()
+energy_level_gauge()
+show_streak_progress()
+task_completion_heatmap()
+
 # --- VOICE COMMANDS ---
 if st.sidebar.checkbox("Enable Voice Commands"):
-    recognizer = sr.Recognizer()
-    mic = sr.Microphone()
+    if 'voice_assistant' not in st.session_state:
+        st.session_state.voice_assistant = VoiceAssistant()
+    va: VoiceAssistant = st.session_state.voice_assistant
+    continuous = st.sidebar.checkbox("Continuous Listening")
     if st.sidebar.button("Listen"):
-        with mic as source:
-            audio = recognizer.listen(source, phrase_time_limit=5)
-        try:
-            command = recognizer.recognize_google(audio)
-            st.sidebar.write("You said:", command)
-            if command.lower().startswith("add task"):
-                task_text = command[8:].strip()
-                if task_text:
-                    tasks = load_tasks()
-                    tasks.append(task_text)
-                    save_tasks(tasks)
-                    notification.notify(title="Task Added", message=task_text)
-                    st.experimental_rerun()
-            elif command.lower().startswith("log mood"):
-                mood_text = command[8:].strip()
-                if mood_text:
-                    log_mood(mood_text)
-                    notification.notify(title="Mood Logged", message=mood_text)
-                    st.experimental_rerun()
-        except sr.UnknownValueError:
-            st.sidebar.write("Could not understand audio")
-        except Exception as e:
-            st.sidebar.write("Error:", e)
+        heard = va.listen_once()
+        if heard:
+            st.sidebar.write("Heard:", heard)
+        else:
+            st.sidebar.write("No command detected")
+    if continuous:
+        va.listen_continuously()
+
 
 # --- JOURNAL SECTION ---
 st.header("Journal")
@@ -99,3 +122,24 @@ if st.button("Save Entry") and journal_text:
         log_entry(journal_text)
         notification.notify(title="Entry Saved", message=journal_text[:20])
     st.experimental_rerun()
+
+fab_html = """
+<style>
+#fab {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  background-color: #6200ee;
+  color: white;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  font-size: 32px;
+  text-align: center;
+  line-height: 56px;
+  text-decoration: none;
+}
+</style>
+<a id="fab" href="#add_task_input">+</a>
+"""
+st.markdown(fab_html, unsafe_allow_html=True)

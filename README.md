@@ -42,6 +42,31 @@ pip install streamlit plyer pyttsx3 SpeechRecognition pyaudio
 ```
 They are optional but can enhance the experience.
 
+## Chat Platform Bots
+
+BuildingLifeAgent includes integrations for Discord and Slack.
+
+### Discord
+
+Run the bot with:
+```bash
+export DISCORD_TOKEN=your_token
+export DISCORD_USER_ID=your_user_id
+python -m discord_bot.bot
+```
+Use commands like `!tasks`, `!addtask`, `!complete`, `!streak`, `!mood` and `!pomodoro <channel_id>`.
+
+### Slack
+
+Create a Slack app with Socket Mode enabled and set the tokens:
+```bash
+export SLACK_BOT_TOKEN=xoxb-...
+export SLACK_APP_TOKEN=xapp-...
+python -m slack_integration.slack_app
+```
+Slash commands `/tasks`, `/streak`, `/mood` and `/standup` will respond.
+
+
 ## Web dashboard
 
 A lightweight dashboard (`webapp.py`) lets you manage tasks, goals, mood logs and journal entries in a browser. Start it with:
@@ -50,6 +75,13 @@ streamlit run webapp.py
 ```
 Journal notes are saved to `data/journal.txt` alongside the other data files. The dashboard can also send notifications using plyer and, if enabled in the sidebar, respond to basic voice commands.
 
+## Audio Interface
+
+The optional `audio_interface` package provides a screenless workflow:
+- `podcast_generator.generate_briefing()` reads a short morning summary.
+- `ambient_engine.play_mode()` plays ambient background sounds.
+- `voice_journal.record_entry()` lets you dictate a journal entry and `voice_journal.analyze_entry()` asks Gemini for a short reflection.
+- `ambient_engine.suggest_playlist()` creates task-based playlist ideas.
 
 ## Running Tests
 
@@ -59,3 +91,9 @@ Install the requirements and run `pytest` from the project root:
 pip install -r requirements.txt
 pytest
 ```
+## CLI Dashboard and Integrations
+
+- **Textual dashboard:** run `python -m terminal_ui.dashboard` for a TUI overview of tasks, goals and mood.
+- **Shell prompt:** source `shell_integration/agent_prompt.sh` to show your current mood, streak and next task in the prompt.
+- **Vim plugin:** copy `editor_plugins/vim_agent.vim` to your Vim plugin directory to add `:AgentAddTask`, `:AgentCompleteTask` and `:AgentLogMood` commands inside the editor.
+

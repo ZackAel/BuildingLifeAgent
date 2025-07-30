@@ -1,0 +1,10 @@
+{
+    "name": "BuildingLifeAgent",
+    "short_name": "LifeAgent",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "description": "Productivity assistant mobile app",
+    "icons": []
+  }
+  

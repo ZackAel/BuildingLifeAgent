@@ -1,6 +1,12 @@
 requests
 python-dotenv
 pytest
+schedule
+win10toast
+fastapi
+uvicorn
+discord.py
+slack_bolt
 
 # Optional extras
 streamlit
@@ -8,3 +14,5 @@ plyer
 pyttsx3
 SpeechRecognition
 pyaudio
+PyQt5
+textual
