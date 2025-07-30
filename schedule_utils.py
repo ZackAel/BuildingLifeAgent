@@ -1,8 +1,15 @@
 import datetime
 import os
-from data_utils import ensure_file
+from data_utils import ensure_file, get_path
 
-MEETINGS_FILE = 'meetings.txt'
+OLD_MEETINGS_FILE = "meetings.txt"
+MEETINGS_FILE = "data/meetings.txt"
+
+# migrate old meetings file if needed
+new_path = get_path(MEETINGS_FILE)
+if os.path.exists(OLD_MEETINGS_FILE) and not os.path.exists(new_path):
+    os.makedirs(os.path.dirname(new_path), exist_ok=True)
+    os.rename(OLD_MEETINGS_FILE, new_path)
 
 
 def load_meetings():

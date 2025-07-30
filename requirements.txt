@@ -1,3 +1,10 @@
 requests
 python-dotenv
 pytest
+
+# Optional extras
+streamlit
+plyer
+pyttsx3
+SpeechRecognition
+pyaudio

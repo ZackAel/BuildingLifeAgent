@@ -8,6 +8,10 @@ BuildingLifeAgent is a small command line productivity assistant. It keeps track
    ```bash
    pip install -r requirements.txt
    ```
+   To enable the optional GUI, notifications and voice features also install:
+   ```bash
+   pip install streamlit plyer pyttsx3 SpeechRecognition pyaudio
+   ```
 2. Provide your [Gemini API](https://ai.google.dev/) key in a `.env` file at the project root:
    ```bash
    GEMINI_API_KEY=your_key_here
@@ -28,11 +32,15 @@ The program will prompt you to add tasks, goals or mood entries and then query t
 
 ## Optional Features
 
-- **Notifications:** install `plyer` for desktop alerts.
+ - **Notifications:** install `plyer` for cross-platform desktop alerts (macOS, Linux and Windows).
 - **Voice & speech:** install `pyttsx3` for text-to-speech and `SpeechRecognition` (requires `pyaudio`) for voice commands.
 - **GUI:** install `streamlit` to use the included web dashboard.
 
-These extras are optional but can enhance the experience.
+These packages are listed under `# Optional extras` in `requirements.txt` and can be installed with:
+```bash
+pip install streamlit plyer pyttsx3 SpeechRecognition pyaudio
+```
+They are optional but can enhance the experience.
 
 ## Web dashboard
 

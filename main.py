@@ -144,15 +144,13 @@ def mood_based_message():
     else:
         return "Every feeling is valid. You got this!"
 
-def notify(message):
+def notify(message: str) -> None:
+    """Display a desktop notification in a cross-platform way."""
     try:
-        import platform
-        if platform.system() == "Darwin":
-            os.system(f"""osascript -e 'display notification "{message}" with title "AI Agent"'""")
-        elif platform.system() == "Linux":
-            os.system(f'notify-send "AI Agent" "{message}"')
-        # Windows notification can be added with plyer
+        from plyer import notification
+        notification.notify(title="AI Agent", message=message)
     except Exception:
+        # Notifications are optional; ignore errors quietly
         pass
 
 def show_progress_bars():
