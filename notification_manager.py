@@ -32,6 +32,8 @@ class NotificationManager:
             return
         try:
             notification.notify(title="AI Agent", message=message)
+        except NotImplementedError:
+            print(message)
         except Exception:
             pass
 

@@ -1,3 +1,10 @@
+import speech_recognition as sr
+import pyttsx3
+from difflib import get_close_matches
+from tasks import load_tasks, save_tasks
+from mood import log_mood
+from plyer import notification
+
 class VoiceAssistant:
     """Handle voice input and output for the web dashboard."""
 
@@ -47,7 +54,10 @@ class VoiceAssistant:
         tasks = load_tasks()
         tasks.append(task_text)
         save_tasks(tasks)
-        notification.notify(title='Task Added', message=task_text)
+        try:
+            notification.notify(title='Task Added', message=task_text)
+        except NotImplementedError:
+            print(f"Task added: {task_text}")
         self.speak(f'Task {task_text} added.')
 
     def _log_mood(self, mood_text: str) -> None:
@@ -55,7 +65,10 @@ class VoiceAssistant:
             self.speak('Please specify your mood.')
             return
         log_mood(mood_text)
-        notification.notify(title='Mood Logged', message=mood_text)
+        try:
+            notification.notify(title='Mood Logged', message=mood_text)
+        except NotImplementedError:
+            print(f"Mood logged: {mood_text}")
         self.speak('Mood logged.')
 
     def handle_command(self, text: str) -> None:

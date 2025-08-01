@@ -38,7 +38,7 @@ def record_entry(duration: int = 30) -> Optional[str]:
         except Exception:
             return None
 
-    log_entry(text)
+    log_entry("", text)
     return text
 
 

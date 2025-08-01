@@ -26,6 +26,8 @@ class ContactItem(BaseModel):
 
 class JournalItem(BaseModel):
     text: str
+    title: str = ""
+
 
 @app.get("/tasks")
 def get_tasks():
@@ -118,7 +120,7 @@ def burnout_check():
 
 @app.post("/journal")
 def log_journal(entry: JournalItem):
-    journal.log_entry(entry.text)
+    journal.log_entry(entry.title, entry.text)
     return {"status": "logged"}
 
 @app.get("/journal")

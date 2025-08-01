@@ -46,7 +46,10 @@ for i, task in enumerate(tasks, 1):
         complete_task(task)
         tasks.remove(task)
         save_tasks(tasks)
-        notification.notify(title="Task Completed", message=task)
+        try:
+            notification.notify(title="Task Completed", message=task)
+        except NotImplementedError:
+            st.toast(f"Task completed: {task}")
         st.rerun()
 
 new_task = st.text_input("Add Task", key="add_task_input")
@@ -54,7 +57,10 @@ if st.button("Add Task", key="add_task_btn") and new_task:
     tasks.append(new_task)
     save_tasks(tasks)
     record_task_date(new_task)
-    notification.notify(title="New Task Added", message=new_task)
+    try:
+        notification.notify(title="New Task Added", message=new_task)
+    except NotImplementedError:
+        st.toast(f"New task added: {new_task}")
     st.rerun()
 
 # --- GOALS SECTION ---
@@ -64,7 +70,10 @@ for goal in load_goals():
 new_goal = st.text_input("Add Goal")
 if st.button("Save Goal") and new_goal:
     save_goal(new_goal)
-    notification.notify(title="Goal Saved", message=new_goal)
+    try:
+        notification.notify(title="Goal Saved", message=new_goal)
+    except NotImplementedError:
+        st.toast("Goal saved")
     st.rerun()
 
 # --- MOOD SECTION ---
@@ -78,7 +87,10 @@ else:
 mood_entry = st.text_input("Log Mood")
 if st.button("Log Mood") and mood_entry:
     log_mood(mood_entry)
-    notification.notify(title="Mood Logged", message=mood_entry)
+    try:
+        notification.notify(title="Mood Logged", message=mood_entry)
+    except NotImplementedError:
+        st.toast("Mood logged")
     st.rerun()
 
 mood_trend_chart()
@@ -113,15 +125,18 @@ except Exception:
 
 if recent_entries:
     st.subheader("Recent Entries")
-    for line in recent_entries:
-        st.write("- ", line)
+    for timestamp, title, text in recent_entries:
+        display_title = f" | {title}" if title else ""
+        st.write(f"- {timestamp}{display_title} | {text}")
 
+journal_title = st.text_input("Entry Title")
 journal_text = st.text_area("New Entry")
 if st.button("Save Entry") and journal_text:
     if log_entry:
-        log_entry(journal_text)
+        log_entry(journal_title, journal_text)
         notification.notify(title="Entry Saved", message=journal_text[:20])
     st.rerun()
+
 
 fab_html = """
 <style>
