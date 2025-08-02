@@ -11,6 +11,7 @@ slack_bolt
 # Optional extras
 streamlit
 plyer
+# Linux desktop notifications also require python-dbus (dbus-python)
 pyttsx3
 SpeechRecognition
 pyaudio

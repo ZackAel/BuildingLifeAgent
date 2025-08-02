@@ -1,27 +1,50 @@
 from data_utils import ensure_file, get_path
 import datetime
+import json
+
 
 # File storing when tasks were first added
 TASK_DATES_FILE = ensure_file("task_dates.txt")
 
-def load_tasks():
+
+def load_tasks_with_difficulty():
+    """Load tasks along with their difficulty level."""
     path = ensure_file("tasks.txt")
+    tasks = []
     with open(path, "r") as f:
-        tasks = []
         for line in f:
             cleaned = line.strip()
             if not cleaned:
                 continue
             if cleaned.startswith(("def ", "from ", "import ")):
                 continue
-            tasks.append(cleaned)
-        return tasks
+            if "|" in cleaned:
+                name, difficulty = cleaned.split("|", 1)
+                tasks.append({"name": name.strip(), "difficulty": difficulty.strip() or "medium"})
+            else:
+                tasks.append({"name": cleaned, "difficulty": "medium"})
+    return tasks
+
+
+def load_tasks():
+    """Load tasks without metadata for backward compatibility."""
+    return [t["name"] for t in load_tasks_with_difficulty()]
+
 
 def save_tasks(tasks):
+    """Save tasks, preserving difficulty metadata when possible."""
     path = ensure_file("tasks.txt")
+    existing = {t["name"]: t["difficulty"] for t in load_tasks_with_difficulty()}
     with open(path, "w") as f:
         for task in tasks:
-            f.write(task + "\n")
+            if isinstance(task, dict):
+                name = task.get("name", "").strip()
+                difficulty = task.get("difficulty", existing.get(name, "medium"))
+            else:
+                name = str(task).strip()
+                difficulty = existing.get(name, "medium")
+            if name:
+                f.write(f"{name}|{difficulty}\n")
 
 def complete_task(task):
     path = ensure_file("completed_tasks.txt")

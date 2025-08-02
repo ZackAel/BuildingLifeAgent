@@ -9,17 +9,30 @@ import math
 # Import all agent modules
 from main import run_agent
 from tasks import load_tasks, save_tasks, complete_task, get_task_age_days, record_task_date
-from mood import log_mood, get_today_mood, journaling_prompt, ascii_mood
+from mood import log_mood, get_today_mood, journaling_prompt, ascii_mood, MOOD_FILE
 from streak import get_current_streak, update_streak
 from energy import compute_energy_index
 from motivation import get_motivational_message
 from goals import load_goals, save_goal
 from relationships import contacts_needing_ping, log_interaction
 from schedule_utils import intelligent_schedule
-from gemini_api import ask_gemini
+from gemini_api import ask_gemini, has_api_key
 from guardrails import burnout_warning
 from game_engine import quest_manager, character_system
 import tkinter.simpledialog
+
+AI_AVAILABLE = has_api_key()
+
+def _mood_score(m: str) -> int:
+    """Return a numeric mood score for plotting."""
+    m = m.lower()
+    if any(w in m for w in ["happy", "great", "good", "motivated", "excited"]):
+        return 1
+    if any(w in m for w in ["sad", "bad", "tired", "stressed"]):
+        return -1
+    return 0
+
+
 
 class EnhancedAgentPopup:
     def __init__(self):
@@ -42,10 +55,18 @@ class EnhancedAgentPopup:
         
         self.root.configure(bg=self.colors['bg'])
         
+        if not AI_AVAILABLE:
+            messagebox.showwarning(
+                "AI Disabled",
+                "GEMINI_API_KEY not found. AI features are disabled.",
+            )
+
         # Initialize state
         self.pomodoro_running = False
         self.pomodoro_time = 25 * 60
         self.chat_messages = []
+        # Flag indicating whether we're showing the 3-hour preview
+        self.schedule_preview_mode = True
         
         self.setup_ui()
         self.update_display()
@@ -220,7 +241,14 @@ class EnhancedAgentPopup:
             pady=10
         )
         self.motivation_text.pack(fill='x')
-        
+     
+        # Mood trend chart
+        self.mood_chart_frame = tk.Frame(dashboard_frame, bg=self.colors['bg'])
+        self.mood_chart_frame.pack(fill='x', padx=10, pady=(0, 10))
+        self.mood_chart_widget = None
+        self.mood_chart_canvas = None
+        self.update_mood_chart()
+   
         # Tasks with progress indicators
         tasks_label = tk.Label(
             dashboard_frame,
@@ -275,6 +303,59 @@ class EnhancedAgentPopup:
         # Bind Enter key
         self.task_entry.bind('<Return>', lambda e: self.add_task_from_entry())
     
+    def update_mood_chart(self):
+        """Render a simple line chart of recent mood entries."""
+        try:
+            from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+            from matplotlib.figure import Figure
+        except Exception:
+            return
+
+        try:
+            with open(MOOD_FILE, "r") as f:
+                lines = [line.strip() for line in f if line.strip()]
+        except FileNotFoundError:
+            lines = []
+
+        if self.mood_chart_widget:
+            self.mood_chart_widget.destroy()
+            self.mood_chart_widget = None
+
+        if not lines:
+            self.mood_chart_widget = tk.Label(
+                self.mood_chart_frame,
+                text="No mood data",
+                bg=self.colors['bg'],
+                fg=self.colors['text'],
+            )
+            self.mood_chart_widget.pack()
+            return
+
+        last = lines[-7:]
+        dates = []
+        scores = []
+        for line in last:
+            ts, mood, _ = line.split(",", 2)
+            dates.append(ts.split(" ")[0])
+            scores.append(_mood_score(mood))
+
+        fig = Figure(figsize=(4, 2), dpi=100)
+        ax = fig.add_subplot(111)
+        ax.plot(range(len(scores)), scores, marker="o")
+        ax.set_xticks(range(len(dates)))
+        ax.set_xticklabels(dates, rotation=45, ha="right")
+        ax.set_ylim(-1, 1)
+        ax.set_title("Mood Trend")
+        fig.tight_layout()
+
+        canvas = FigureCanvasTkAgg(fig, master=self.mood_chart_frame)
+        canvas.draw()
+        widget = canvas.get_tk_widget()
+        widget.pack(fill='x')
+        self.mood_chart_canvas = canvas
+        self.mood_chart_widget = widget
+
+
     def create_schedule_tab(self):
         """Create the schedule tab"""
         schedule_frame = tk.Frame(self.notebook, bg=self.colors['bg'])
@@ -297,6 +378,9 @@ class EnhancedAgentPopup:
             pady=10
         )
         self.schedule_text.pack(fill='both', expand=True, padx=10, pady=(0, 10))
+
+        # Show initial 3-hour schedule preview
+        self.update_schedule_preview()
         
         # Pomodoro timer
         timer_frame = tk.Frame(schedule_frame, bg=self.colors['secondary'])
@@ -330,6 +414,16 @@ class EnhancedAgentPopup:
         chat_frame = tk.Frame(self.notebook, bg=self.colors['bg'])
         self.notebook.add(chat_frame, text="AI Chat")
         
+        if not AI_AVAILABLE:
+            tk.Label(
+                chat_frame,
+                text="GEMINI_API_KEY not found. AI chat disabled.",
+                bg=self.colors['bg'],
+                fg=self.colors['text'],
+                wraplength=450,
+            ).pack(padx=10, pady=10)
+            return
+
         # Chat display
         self.chat_display = tk.Text(
             chat_frame,
@@ -490,6 +584,28 @@ class EnhancedAgentPopup:
             self.colors['accent']
         ).pack(pady=(0, 10))
     
+        # Motivation and energy quick actions
+        wellness_frame = tk.LabelFrame(
+            actions_frame,
+            text="Motivation & Energy",
+            font=('Arial', 10, 'bold'),
+            bg=self.colors['bg'],
+            fg=self.colors['text']
+        )
+        wellness_frame.pack(fill='x', padx=10, pady=10)
+
+        self.create_rounded_button(
+            wellness_frame, "Request Motivation",
+            self.request_motivation,
+            self.colors['secondary']
+        ).pack(side='left', padx=5, pady=5)
+
+        self.create_rounded_button(
+            wellness_frame, "Energy Check-in",
+            self.energy_check_in,
+            self.colors['secondary']
+        ).pack(side='left', padx=5, pady=5)
+
     def update_display(self):
         """Update all displayed information"""
         # Update stats
@@ -523,7 +639,10 @@ class EnhancedAgentPopup:
             self.motivation_text.config(state=tk.DISABLED)
         except:
             pass
-        
+  
+        # Update mood trend chart
+        self.update_mood_chart()
+      
         # Update tasks display
         self.display_tasks()
         
@@ -533,6 +652,10 @@ class EnhancedAgentPopup:
         # Update journal prompt
         self.journal_prompt_label.config(text=journaling_prompt())
     
+        # Update schedule preview if we're in preview mode
+        if self.schedule_preview_mode:
+            self.update_schedule_preview()
+
     def display_tasks(self):
         """Display tasks with visual indicators"""
         # Clear existing tasks
@@ -621,6 +744,33 @@ class EnhancedAgentPopup:
             self.task_entry.delete(0, tk.END)
             self.update_display()
             messagebox.showinfo("✅ Success", f"Added: {task}")
+
+    def update_schedule_preview(self):
+        """Compute and display the next 3 hours of schedule"""
+        tasks = load_tasks()
+        schedule = intelligent_schedule(tasks)
+        now = datetime.datetime.now()
+        end = now + datetime.timedelta(hours=3)
+        lines = []
+        for line in schedule.split('\n'):
+            if not line.strip():
+                continue
+            try:
+                start_str = line.split(' - ')[0]
+                start_dt = datetime.datetime.combine(
+                    now.date(), datetime.datetime.strptime(start_str, '%H:%M').time()
+                )
+                if now <= start_dt < end:
+                    lines.append(line)
+            except Exception:
+                continue
+
+        self.schedule_preview_mode = True
+        if lines:
+            self.display_schedule('\n'.join(lines))
+        else:
+            self.schedule_text.delete(1.0, tk.END)
+            self.schedule_text.insert(1.0, "No events scheduled in the next 3 hours.")
     
     def generate_schedule(self):
         """Generate intelligent schedule"""
@@ -632,6 +782,8 @@ class EnhancedAgentPopup:
         
         self.schedule_text.delete(1.0, tk.END)
         self.schedule_text.insert(1.0, "Generating optimal schedule...")
+        self.schedule_preview_mode = False
+
         
         # Run in thread to avoid freezing UI
         def generate():
@@ -702,6 +854,14 @@ class EnhancedAgentPopup:
     
     def send_chat_message(self):
         """Send message to AI chat"""
+        if not AI_AVAILABLE:
+            messagebox.showwarning(
+                "AI Disabled",
+                "GEMINI_API_KEY not found. AI chat disabled.",
+            )
+            return
+
+        
         message = self.chat_entry.get().strip()
         if not message:
             return
@@ -790,6 +950,22 @@ class EnhancedAgentPopup:
             self.journal_text.delete(1.0, tk.END)
             messagebox.showinfo("📝 Saved", "Journal entry saved!")
     
+    def request_motivation(self):
+        """Fetch and display a motivational message"""
+        try:
+            message = get_motivational_message()
+            messagebox.showinfo("💡 Motivation", message)
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not retrieve motivation: {e}")
+
+    def energy_check_in(self):
+        """Compute energy index and show result"""
+        try:
+            energy = compute_energy_index()
+            messagebox.showinfo("⚡ Energy Check", f"Your energy level is {energy}%")
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not compute energy: {e}")
+
     def take_break(self):
         """Initiate mindfulness break"""
         self.root.withdraw()
@@ -871,6 +1047,7 @@ class EnhancedAgentPopup:
     
     def auto_refresh(self):
         """Auto refresh display every 30 seconds"""
+        # update_display will refresh the schedule preview when in preview mode
         self.update_display()
         self.root.after(30000, self.auto_refresh)
     
@@ -878,6 +1055,10 @@ class EnhancedAgentPopup:
         """Start the application"""
         self.root.mainloop()
 
-if __name__ == "__main__":
+def run_popup_agent():
+    """Run the visual popup agent"""
     app = EnhancedAgentPopup()
     app.run()
+
+if __name__ == "__main__":
+    run_popup_agent()

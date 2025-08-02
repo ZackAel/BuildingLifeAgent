@@ -1,7 +1,7 @@
 """Voice journaling utilities."""
 
 from __future__ import annotations
-
+import os
 from typing import Optional
 
 try:
@@ -29,6 +29,8 @@ def record_entry(duration: int = 30) -> Optional[str]:
     if sr is None:
         print("Speech recognition not available.")
         return None
+    os.environ.setdefault("PYTHONWARNINGS", "ignore")
+    os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 
     r = sr.Recognizer()
     with sr.Microphone() as source:

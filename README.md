@@ -32,7 +32,7 @@ The program will prompt you to add tasks, goals or mood entries and then query t
 
 ## Optional Features
 
- - **Notifications:** install `plyer` for cross-platform desktop alerts (macOS, Linux and Windows).
+- **Notifications:** install `plyer` for cross-platform desktop alerts. On Linux, also install `python-dbus`/`dbus-python`.
 - **Voice & speech:** install `pyttsx3` for text-to-speech and `SpeechRecognition` (requires `pyaudio`) for voice commands.
 - **GUI:** install `streamlit` to use the included web dashboard.
 
@@ -82,6 +82,20 @@ The optional `audio_interface` package provides a screenless workflow:
 - `ambient_engine.play_mode()` plays ambient background sounds.
 - `voice_journal.record_entry()` lets you dictate a journal entry and `voice_journal.analyze_entry()` asks Gemini for a short reflection.
 - `ambient_engine.suggest_playlist()` creates task-based playlist ideas.
+
+### Headless audio setups
+
+In containers or other headless environments without a sound card, ALSA or JACK
+may print noisy warnings. Set a dummy audio driver and hide benign Python
+warnings before running the program:
+
+```bash
+export SDL_AUDIODRIVER=dummy
+export PYTHONWARNINGS=ignore
+```
+
+These variables prevent audio backends from searching for real hardware and
+suppress harmless warning messages.
 
 ## Running Tests
 

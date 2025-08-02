@@ -1,2 +1,2 @@
-Read your code so I know what I did
-Go to the gym
+Read your code so I know what I did|short
+Go to the gym|long

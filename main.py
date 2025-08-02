@@ -283,6 +283,8 @@ def sync_with_notion():
 
 def speak(text):
     try:
+        os.environ.setdefault("PYTHONWARNINGS", "ignore")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
         import pyttsx3
         engine = pyttsx3.init()
         engine.say(text)

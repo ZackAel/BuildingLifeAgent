@@ -1,16 +1,22 @@
+import os
 import speech_recognition as sr
 import pyttsx3
 from difflib import get_close_matches
 from tasks import load_tasks, save_tasks
 from mood import log_mood
-from plyer import notification
+from notification_manager import safe_notify
 
 class VoiceAssistant:
     """Handle voice input and output for the web dashboard."""
 
     def __init__(self):
+        os.environ.setdefault("PYTHONWARNINGS", "ignore")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
         self.recognizer = sr.Recognizer()
-        self.mic = sr.Microphone()
+        try:
+            self.mic = sr.Microphone()
+        except OSError:
+            self.mic = None        
         try:
             self.engine = pyttsx3.init()
         except Exception:
@@ -54,10 +60,8 @@ class VoiceAssistant:
         tasks = load_tasks()
         tasks.append(task_text)
         save_tasks(tasks)
-        try:
-            notification.notify(title='Task Added', message=task_text)
-        except NotImplementedError:
-            print(f"Task added: {task_text}")
+        safe_notify('Task Added', task_text)
+
         self.speak(f'Task {task_text} added.')
 
     def _log_mood(self, mood_text: str) -> None:
@@ -65,10 +69,7 @@ class VoiceAssistant:
             self.speak('Please specify your mood.')
             return
         log_mood(mood_text)
-        try:
-            notification.notify(title='Mood Logged', message=mood_text)
-        except NotImplementedError:
-            print(f"Mood logged: {mood_text}")
+        safe_notify('Mood Logged', mood_text)
         self.speak('Mood logged.')
 
     def handle_command(self, text: str) -> None:
@@ -81,6 +82,9 @@ class VoiceAssistant:
 
     def listen_once(self) -> str | None:
         """Listen for a single command after the wake word."""
+        if not self.mic:
+            self.speak('Microphone not available.')
+            return None
         with self.mic as source:
             self.recognizer.adjust_for_ambient_noise(source)
             audio = self.recognizer.listen(source, phrase_time_limit=5)
@@ -98,6 +102,9 @@ class VoiceAssistant:
 
     def listen_continuously(self, max_iterations: int = 20) -> None:
         """Continuously listen until told to stop or max_iterations reached."""
+        if not self.mic:
+            self.speak('Microphone not available.')
+            return
         self.listening = True
         iterations = 0
         while self.listening and iterations < max_iterations:

@@ -8,6 +8,25 @@ import sys
 import subprocess
 import time
 import os
+import webbrowser
+
+
+def _can_launch_browser() -> bool:
+    """Return True if the environment likely supports opening a web browser.
+
+    A GUI is considered available when running on Windows or when the DISPLAY
+    variable is set on Unix systems. Users can force headless mode by setting
+    the ``BUILDINGLIFE_HEADLESS`` environment variable.
+    """
+
+    if os.environ.get("BUILDINGLIFE_HEADLESS"):
+        return False
+
+    # On non-Windows systems a missing DISPLAY usually indicates no GUI.
+    if sys.platform != "win32" and not os.environ.get("DISPLAY"):
+        return False
+
+    return True
 
 def print_banner():
     print("""
@@ -22,11 +41,35 @@ def run_web_dashboard():
     print("🌐 Starting web dashboard...")
     print("This will open in your browser automatically.")
     print("Press Ctrl+C to stop.")
+
+    url = "http://localhost:8501"
+    process = None
+
+
     try:
-        subprocess.run(["streamlit", "run", "webapp.py"])
+        # Streamlit is started in headless mode so we can decide whether to
+        # open a browser based on environment detection.
+        process = subprocess.Popen(
+            ["streamlit", "run", "webapp.py", "--server.headless=true"]
+        )
+        # Give the server a moment to start before opening the browser
+        time.sleep(1)
+
+        if _can_launch_browser():
+            try:
+                webbrowser.open(url)
+            except webbrowser.Error as e:
+                print(f"⚠️  Could not open browser automatically: {e}")
+                print(f"   Please open {url} manually.")
+        else:
+            print(f"📝 No GUI detected. Access the dashboard at {url}")
+
+        process.wait()
     except FileNotFoundError:
         print("❌ Streamlit not installed. Install with: pip install streamlit")
     except KeyboardInterrupt:
+        if process:
+            process.terminate()
         print("\n👋 Web dashboard stopped.")
 
 def run_popup_agent():

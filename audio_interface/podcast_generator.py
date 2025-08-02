@@ -8,6 +8,7 @@ text-to-speech engine cannot be loaded.
 from __future__ import annotations
 
 import datetime
+import os
 from typing import Iterable, Optional
 
 try:
@@ -39,6 +40,8 @@ def generate_briefing(lines: Iterable[str], filename: Optional[str] = None) -> s
         print(text)
         return text
 
+    os.environ.setdefault("PYTHONWARNINGS", "ignore")
+    os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
     engine = pyttsx3.init()
     if filename:
         engine.save_to_file(text, filename)

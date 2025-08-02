@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 try:
     from plyer import notification
@@ -9,6 +10,28 @@ try:
     import tkinter as tk
 except Exception:
     tk = None
+
+try:
+    import dbus  # type: ignore
+except Exception:
+    dbus = None
+    _msg = "python-dbus not found; install 'dbus-python' for desktop notifications"
+    try:
+        import streamlit as st
+        st.warning(_msg)
+    except Exception:
+        logging.warning(_msg)
+
+def safe_notify(title: str, message: str) -> None:
+    """Wrapper around plyer notification with graceful fallback."""
+    if notification is None:
+        print(f"{title}: {message}")
+        return
+    try:
+        notification.notify(title=title, message=message)
+    except Exception as exc:
+        logging.warning("Notification failed: %s", exc)
+        print(f"{title}: {message}")
 
 
 class NotificationManager:
@@ -28,14 +51,7 @@ class NotificationManager:
     def send_alert(self, message: str) -> None:
         if self.is_snoozed():
             return
-        if notification is None:
-            return
-        try:
-            notification.notify(title="AI Agent", message=message)
-        except NotImplementedError:
-            print(message)
-        except Exception:
-            pass
+        safe_notify("AI Agent", message)
 
     # --- interactive popups ---
     def send_interactive(self, message: str, actions: dict[str, callable] | None = None) -> None:
