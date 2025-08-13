@@ -83,16 +83,16 @@ def run_popup_agent():
         print(f"❌ Error importing popup agent: {e}")
         print("Make sure tkinter is installed (usually comes with Python)")
 
-def run_background_daemon():
-    """Start the background daemon"""
-    print("🔄 Starting background daemon...")
+def run_background_beast():
+    """Start the background beast"""
+    print("🔄 Starting background beast...")
     print("This will run in the background and send notifications every hour.")
     try:
         subprocess.run([sys.executable, "agent_beast.py", "start"])
-        print("✅ Background daemon started!")
+        print("✅ Background beast started!")
         print("Use 'python agent_beast.py stop' to stop it.")
     except Exception as e:
-        print(f"❌ Error starting daemon: {e}")
+        print(f"❌ Error starting beast: {e}")
 
 def run_terminal_mode():
     """Run the original terminal interface"""
@@ -153,7 +153,7 @@ def main():
     options = {
         "1": ("🌐 Web Dashboard (Recommended)", run_web_dashboard),
         "2": ("🖥️  Popup Agent", run_popup_agent),
-        "3": ("🔄 Background Daemon", run_background_daemon),
+        "3": ("🔄 Background beast", run_background_beast),
         "4": ("💻 Terminal Mode", run_terminal_mode),
         "5": ("🚀 API Server", run_api_server),
         "q": ("👋 Quit", sys.exit)

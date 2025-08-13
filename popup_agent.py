@@ -790,7 +790,7 @@ class EnhancedAgentPopup:
             schedule = intelligent_schedule(tasks)
             self.root.after(0, lambda: self.display_schedule(schedule))
         
-        threading.Thread(target=generate, daemon=True).start()
+        threading.Thread(target=generate, beast=True).start()
     
     def display_schedule(self, schedule):
         """Display the generated schedule"""
@@ -882,7 +882,7 @@ class EnhancedAgentPopup:
             except Exception as e:
                 self.root.after(0, lambda: self.display_ai_response("I'm here to support you! How can I help?"))
         
-        threading.Thread(target=get_response, daemon=True).start()
+        threading.Thread(target=get_response, beast=True).start()
         
         # Show typing indicator
         self.chat_display.insert(tk.END, "AI: Thinking...\n", "ai")
