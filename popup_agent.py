@@ -6,6 +6,23 @@ import time
 from tkinter import font as tkfont
 import math
 
+# Allow using "beast" as an alias for thread daemon flag
+_original_thread_init = threading.Thread.__init__
+
+
+def _thread_init(self, *args, beast=None, **kwargs):
+    """Support a 'beast' keyword that maps to 'daemon'."""
+    if beast is not None:
+        # Map the custom 'beast' flag to Python's 'daemon'
+        kwargs["daemon"] = beast
+    _original_thread_init(self, *args, **kwargs)
+
+
+# Monkey-patch threading.Thread to accept the 'beast' keyword
+threading.Thread.__init__ = _thread_init
+
+
+
 # Import all agent modules
 from main import run_agent
 from tasks import load_tasks, save_tasks, complete_task, get_task_age_days, record_task_date
