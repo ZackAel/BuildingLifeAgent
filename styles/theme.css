@@ -1,0 +1,9 @@
+:root {
+    --color-background: #fdfdfd;
+    --color-pastel-pink: #ffd1dc;
+    --color-pastel-blue: #bde0fe;
+    --color-pastel-green: #c7f9cc;
+    --color-pastel-yellow: #fff1a8;
+    --radius-base: 8px;
+    --shadow-sm: 0 0 8px rgba(0,0,0,0.1);
+  }

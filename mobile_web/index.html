@@ -6,33 +6,22 @@
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
     <title>BuildingLifeAgent</title>
-</head>
+  </head>
 <body>
-    <div class="container">
+    <div id="app" class="container">
         <h1>BuildingLifeAgent</h1>
-        <p id="message">Welcome to the mobile dashboard.</p>
-        <button id="notifyBtn">Enable Notifications</button>
-    </div>
-
-    <script src="app.js"></script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css">
-    <title>BuildingLifeAgent</title>
-</head>
-<body>
-    <div class="container">
-        <h1>BuildingLifeAgent</h1>
-        <p id="message">Welcome to the mobile dashboard.</p>
-        <button id="notifyBtn">Enable Notifications</button>
-    </div>
-
-    <script src="app.js"></script>
+        <div class="tabs">
+          <button :class="{active: currentTab==='daily'}" @click="currentTab='daily'">Daily</button>
+          <button :class="{active: currentTab==='tasks'}" @click="currentTab='tasks'">Tasks</button>
+          <button :class="{active: currentTab==='journal'}" @click="currentTab='journal'">Journal</button>
+          <button :class="{active: currentTab==='goals'}" @click="currentTab='goals'">Goals</button>
+        </div>
+    <transition name="fade" mode="out-in">
+      <component :is="currentView" :tasks="tasks" :journal="journal" :goals="goals"></component>
+    </transition>
+  </div>
+  <button id="notifyBtn">Enable Notifications</button>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

@@ -31,6 +31,13 @@ def load_tasks():
     return [t["name"] for t in load_tasks_with_difficulty()]
 
 
+def load_completed_tasks():
+    """Load list of completed tasks."""
+    path = ensure_file("completed_tasks.txt")
+    with open(path, "r") as f:
+        return [line.strip() for line in f if line.strip()]
+
+
 def save_tasks(tasks):
     """Save tasks, preserving difficulty metadata when possible."""
     path = ensure_file("tasks.txt")

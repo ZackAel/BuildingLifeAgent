@@ -49,6 +49,11 @@ def complete_task(item: TaskItem):
     tasks.save_tasks(remaining)
     return {"status": "completed"}
 
+@app.get("/tasks/completed")
+def completed_tasks():
+    """Return list of completed tasks."""
+    return tasks.load_completed_tasks()
+
 @app.get("/goals")
 def get_goals():
     return goals.load_goals()
