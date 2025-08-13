@@ -1,2 +1,1 @@
-Read your code so I know what I did|short
-Go to the gym|long
+Today, I need to finish the python courses that 5o recommended to me|medium
